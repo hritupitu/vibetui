@@ -25,8 +25,7 @@ func Launch(cfg config.Paths) error {
 
 	lazygitCmd := shellWrap(lazygitCommand(cfg))
 	terminalCmd := shellWrap(shell)
-	meloCmd := shellWrap(docsCommand(cfg.WelcomeMD, shell))
-	nvimCmd := shellWrap(fmt.Sprintf("env NVIM_APPNAME=vibetui nvim -u %s -c %s", shellQuote(cfg.NvimInit), shellQuote("set notermguicolors background=dark")))
+	nvimCmd := shellWrap(fmt.Sprintf("env NVIM_APPNAME=vibetui nvim -u %s", shellQuote(cfg.NvimInit)))
 	claudeCmd := shellWrap("claude")
 
 	commands := [][]string{
@@ -36,22 +35,27 @@ func Launch(cfg config.Paths) error {
 		{"split-window", "-t", window + ".0", "-v", "-p", "25", lazygitCmd},
 		{"select-pane", "-t", window + ".0"},
 		{"set-option", "-t", session, "-g", "mouse", "on"},
+		{"set-option", "-t", session, "-g", "default-terminal", "tmux-256color"},
+		{"set-option", "-t", session, "-ag", "terminal-overrides", ",*:RGB"},
 		{"set-option", "-t", session, "-g", "status", "on"},
 		{"set-option", "-t", session, "-g", "status-position", "top"},
 		{"set-option", "-t", session, "-g", "status-justify", "left"},
-		{"set-option", "-t", session, "-g", "status-left", "[Git] [Terminal] [Melo]"},
-		{"set-option", "-t", session, "-g", "status-left-length", "40"},
+		{"set-option", "-t", session, "-g", "status-left", "[Git] [Terminal]"},
+		{"set-option", "-t", session, "-g", "status-left-length", "24"},
 		{"set-option", "-t", session, "-g", "status-right", "Ctrl+C Exit"},
 		{"set-option", "-t", session, "-g", "status-right-length", "20"},
 		{"set-option", "-t", session, "-g", "window-status-format", ""},
 		{"set-option", "-t", session, "-g", "window-status-current-format", ""},
 		{"set-option", "-t", session, "-g", "allow-rename", "off"},
 		{"set-window-option", "-t", window, "pane-border-status", "top"},
-		{"bind-key", "-n", "F1", "respawn-pane", "-k", "-t", bottomTarget, lazygitCmd},
-		{"bind-key", "-n", "F2", "respawn-pane", "-k", "-t", bottomTarget, terminalCmd},
-		{"bind-key", "-n", "F3", "respawn-pane", "-k", "-t", bottomTarget, meloCmd},
+		{"set-window-option", "-t", window, "pane-border-format", "#{pane_title}"},
+		{"select-pane", "-t", window + ".0", "-T", "LazyVim"},
+		{"select-pane", "-t", window + ".2", "-T", "Claude"},
+		{"select-pane", "-t", bottomTarget, "-T", "Git"},
+		{"bind-key", "-n", "F1", "run-shell", swapCommand(bottomTarget, lazygitCmd, "Git")},
+		{"bind-key", "-n", "F2", "run-shell", swapCommand(bottomTarget, terminalCmd, "Terminal")},
 		{"bind-key", "-n", "C-c", "confirm-before", "-p", "Exit vibetui? (y/n)", "kill-session -t " + session},
-		{"bind-key", "-n", "MouseDown1StatusLeft", "run-shell", statusClickScript(session, bottomTarget, lazygitCmd, terminalCmd, meloCmd)},
+		{"bind-key", "-n", "MouseDown1StatusLeft", "run-shell", statusClickScript(bottomTarget, lazygitCmd, terminalCmd)},
 	}
 
 	for _, args := range commands {
@@ -83,8 +87,12 @@ func lazygitCommand(cfg config.Paths) string {
 	return fmt.Sprintf("lazygit --use-config-file %s", shellQuote(configFile))
 }
 
-func statusClickScript(session, bottomTarget, lazygitCmd, terminalCmd, meloCmd string) string {
-	return fmt.Sprintf(`x=#{mouse_x}; if [ "$x" -ge 0 ] && [ "$x" -le 4 ]; then tmux respawn-pane -k -t %s %s; elif [ "$x" -ge 6 ] && [ "$x" -le 15 ]; then tmux respawn-pane -k -t %s %s; elif [ "$x" -ge 17 ] && [ "$x" -le 22 ]; then tmux respawn-pane -k -t %s %s; else :; fi`, bottomTarget, shellQuote(lazygitCmd), bottomTarget, shellQuote(terminalCmd), bottomTarget, shellQuote(meloCmd))
+func statusClickScript(bottomTarget, lazygitCmd, terminalCmd string) string {
+	return fmt.Sprintf(`x=#{mouse_x}; if [ "$x" -ge 0 ] && [ "$x" -le 4 ]; then %s; elif [ "$x" -ge 6 ] && [ "$x" -le 15 ]; then %s; else :; fi`, swapCommand(bottomTarget, lazygitCmd, "Git"), swapCommand(bottomTarget, terminalCmd, "Terminal"))
+}
+
+func swapCommand(target, cmd, title string) string {
+	return fmt.Sprintf("tmux respawn-pane -k -t %s %s && tmux select-pane -t %s -T %s", target, shellQuote(cmd), target, shellQuote(title))
 }
 
 func runTmux(args ...string) error {

@@ -9,7 +9,6 @@ A VS Code-like terminal IDE. No keybindings required.
 | Editor (left) | LazyVim — full editor with file tree |
 | Claude (right) | Claude Code assistant |
 | Git (bottom) | LazyGit — version control |
-| Docs (this) | Melo — markdown viewer |
 
 ## Navigation
 
@@ -26,10 +25,6 @@ Click the status bar buttons at the bottom to jump to a panel.
 | `Ctrl+S` | Save |
 | `Tab` | Next buffer tab |
 | `Shift+Tab` | Previous buffer tab |
-
-## Docs View
-
-Press `Ctrl+O` or click **Open MD** in the status bar to view a different file.
 
 ## Quit
 
