@@ -191,9 +191,69 @@ opt.showtabline  = 2
 opt.relativenumber = false
 opt.number       = true
 opt.guicursor    = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
+opt.autowrite    = true
+opt.autowriteall = true
+opt.updatetime   = 200
+
+local autosave_group = vim.api.nvim_create_augroup("vibetui_autosave", { clear = true })
+local modeless_group = vim.api.nvim_create_augroup("vibetui_modeless", { clear = true })
+
+local function should_edit_buffer(bufnr)
+  local bt = vim.bo[bufnr].buftype
+  local ft = vim.bo[bufnr].filetype
+  if bt ~= "" then
+    return false
+  end
+  if ft == "neo-tree" or ft == "lazy" or ft == "TelescopePrompt" or ft == "snacks_picker_input" then
+    return false
+  end
+  return true
+end
+
+local function autosave()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if not should_edit_buffer(bufnr) then
+    return
+  end
+  if vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly and vim.bo[bufnr].modified then
+    pcall(vim.cmd, "silent! update")
+  end
+end
+
+local function sync_insert_mode()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local editable = should_edit_buffer(bufnr)
+  vim.schedule(function()
+    if vim.api.nvim_get_current_buf() ~= bufnr then
+      return
+    end
+    local mode = vim.fn.mode()
+    if editable then
+      if mode ~= "i" then
+        vim.cmd("startinsert")
+      end
+      return
+    end
+    if mode == "i" or mode == "ic" or mode == "ix" then
+      vim.cmd("stopinsert")
+    end
+  end)
+end
+
+vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged", "TextChangedI", "FocusLost", "BufLeave" }, {
+  group = autosave_group,
+  callback = autosave,
+})
+
+vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+  group = modeless_group,
+  callback = sync_insert_mode,
+})
 
 local map = vim.keymap.set
-map({ "n", "i", "v" }, "<C-s>",  "<cmd>w<cr><esc>",                           { desc = "Save" })
+map("n",               "<C-s>",  "<cmd>w<cr>",                                  { desc = "Save" })
+map("i",               "<C-s>",  "<C-o>:w<cr>",                                  { desc = "Save" })
+map("v",               "<C-s>",  "<esc><cmd>w<cr>gv",                            { desc = "Save" })
 map("n",               "<C-b>",  "<cmd>Neotree toggle<cr>",                    { desc = "Toggle Explorer" })
 map("n",               "<C-`>",  function() require("snacks").terminal() end,  { desc = "Toggle Terminal" })
 map("n",               "<Tab>",  "<cmd>BufferLineCycleNext<cr>",               { desc = "Next Buffer" })
