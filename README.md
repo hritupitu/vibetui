@@ -2,26 +2,15 @@
 
 `vibetui` is a tmux-powered terminal IDE layout designed for Ghostty and other modern terminals.
 
+![vibetui screenshot](./assets/screenshot.png)
+
 It launches:
+
 - **LazyVim** on the left
-- **OpenCode** on the right
+- **OpenCode/Claude Code** on the right
 - **LazyGit** on the bottom, with a one-click swap to a plain terminal
 
 The goal is a mouse-friendly, VS Code-like terminal workspace without forcing users to memorize a lot of Vim or tmux commands.
-
-## Screenshots
-
-### OpenCode mode
-
-![vibetui OpenCode screenshot 1](./Screenshot%202026-03-28%20at%2012.41.15%E2%80%AFAM.png)
-
-![vibetui OpenCode screenshot 2](./Screenshot%202026-03-28%20at%2012.41.23%E2%80%AFAM.png)
-
-### Claude mode
-
-![vibetui Claude screenshot 1](./Screenshot%202026-03-28%20at%2012.35.21%E2%80%AFAM.png)
-
-![vibetui Claude screenshot 2](./Screenshot%202026-03-28%20at%2012.35.35%E2%80%AFAM.png)
 
 ## What vibetui does
 
@@ -59,6 +48,7 @@ vibetui claude
 ```
 
 Default behavior:
+
 - uses **OpenCode**
 
 Persistent preference file:
@@ -72,6 +62,7 @@ Path: `~/.config/vibetui/settings.json`
 ```
 
 Valid values:
+
 - `opencode`
 - `claude`
 
@@ -83,12 +74,14 @@ VIBETUI_ASSISTANT=opencode vibetui
 ```
 
 Priority order:
+
 1. CLI argument (`vibetui opencode` / `vibetui claude`)
 2. `VIBETUI_ASSISTANT` environment variable
 3. `~/.config/vibetui/settings.json`
 
 If you prefer Claude Code, install it from:
-- https://code.claude.com/docs/en/setup
+
+- <https://code.claude.com/docs/en/setup>
 
 ---
 
@@ -115,7 +108,7 @@ Install OpenCode:
 
 Please follow the official OpenCode installation instructions for your platform:
 
-- https://opencode.ai
+- <https://opencode.ai>
 
 If `opencode` still is not found after install, make sure its binary path is added to your shell `PATH`.
 
@@ -133,11 +126,11 @@ sudo dnf install tmux neovim
 
 Install Go using the official instructions:
 
-- https://go.dev/doc/install
+- <https://go.dev/doc/install>
 
 Install OpenCode from the official instructions:
 
-- https://opencode.ai
+- <https://opencode.ai>
 
 Install LazyGit:
 
