@@ -9,6 +9,16 @@ It launches:
 
 The goal is a mouse-friendly, VS Code-like terminal workspace without forcing users to memorize a lot of Vim or tmux commands.
 
+## Screenshots
+
+### OpenCode mode
+
+![vibetui OpenCode screenshot](./Screenshot%202026-03-28%20at%2012.35.21%E2%80%AFAM.png)
+
+### Claude mode
+
+![vibetui Claude screenshot](./Screenshot%202026-03-28%20at%2012.35.35%E2%80%AFAM.png)
+
 ## What vibetui does
 
 When you run `vibetui`, it:
