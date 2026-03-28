@@ -18,6 +18,8 @@ func Launch(cfg config.Paths) error {
 	session := fmt.Sprintf("vibetui-%d", time.Now().Unix())
 	window := session + ":vibetui"
 	bottomTarget := window + ".1"
+	hiddenWindow := session + ":_bottom_state"
+	hiddenTarget := hiddenWindow + ".0"
 	shell := os.Getenv("SHELL")
 	if shell == "" {
 		shell = "/bin/sh"
@@ -40,6 +42,7 @@ func Launch(cfg config.Paths) error {
 		{"split-window", "-t", window + ".0", "-h", "-p", "40", assistantCmd},
 		{"select-pane", "-t", window + ".0"},
 		{"split-window", "-t", window + ".0", "-v", "-p", "25", lazygitCmd},
+		{"new-window", "-d", "-t", session, "-n", "_bottom_state", terminalCmd},
 		{"select-pane", "-t", window + ".0"},
 		{"set-option", "-t", session, "-g", "mouse", "on"},
 		{"set-option", "-t", session, "-g", "default-terminal", "tmux-256color"},
@@ -49,8 +52,8 @@ func Launch(cfg config.Paths) error {
 		{"set-option", "-t", session, "-g", "status-justify", "left"},
 		{"set-option", "-t", session, "-g", "status-left", "[Git] [Terminal]"},
 		{"set-option", "-t", session, "-g", "status-left-length", "24"},
-		{"set-option", "-t", session, "-g", "status-right", "Ctrl+C Exit"},
-		{"set-option", "-t", session, "-g", "status-right-length", "20"},
+		{"set-option", "-t", session, "-g", "status-right", "Ctrl+C Exit/Interrupt"},
+		{"set-option", "-t", session, "-g", "status-right-length", "24"},
 		{"set-option", "-t", session, "-g", "window-status-format", ""},
 		{"set-option", "-t", session, "-g", "window-status-current-format", ""},
 		{"set-option", "-t", session, "-g", "allow-rename", "off"},
@@ -59,10 +62,12 @@ func Launch(cfg config.Paths) error {
 		{"select-pane", "-t", window + ".0", "-T", "LazyVim"},
 		{"select-pane", "-t", window + ".2", "-T", assistantTitle},
 		{"select-pane", "-t", bottomTarget, "-T", "Git"},
-		{"bind-key", "-n", "F1", "run-shell", swapCommand(bottomTarget, lazygitCmd, "Git")},
-		{"bind-key", "-n", "F2", "run-shell", swapCommand(bottomTarget, terminalCmd, "Terminal")},
-		{"bind-key", "-n", "C-c", "confirm-before", "-p", "Exit vibetui? (y/n)", "kill-session -t " + session},
-		{"bind-key", "-n", "MouseDown1StatusLeft", "run-shell", statusClickScript(bottomTarget, lazygitCmd, terminalCmd)},
+		{"select-pane", "-t", hiddenTarget, "-T", "Terminal"},
+		{"bind-key", "-n", "F1", "run-shell", showBottomModeCommand(bottomTarget, hiddenTarget, "Git", "Terminal")},
+		{"bind-key", "-n", "F2", "run-shell", showBottomModeCommand(bottomTarget, hiddenTarget, "Terminal", "Git")},
+		{"bind-key", "-n", "C-c", "if-shell", "-F", "#{==:#{pane_title},Terminal}", "send-keys C-c", exitCommand(session)},
+		{"bind-key", "-n", "MouseDown1StatusLeft", "run-shell", statusClickScript(bottomTarget, hiddenTarget)},
+		{"set-hook", "-t", session, "client-detached", detachedCleanupHook(session)},
 	}
 
 	for _, args := range commands {
@@ -94,12 +99,20 @@ func lazygitCommand(cfg config.Paths) string {
 	return fmt.Sprintf("lazygit --use-config-file %s", shellQuote(configFile))
 }
 
-func statusClickScript(bottomTarget, lazygitCmd, terminalCmd string) string {
-	return fmt.Sprintf(`x=#{mouse_x}; if [ "$x" -ge 0 ] && [ "$x" -le 4 ]; then %s; elif [ "$x" -ge 6 ] && [ "$x" -le 15 ]; then %s; else :; fi`, swapCommand(bottomTarget, lazygitCmd, "Git"), swapCommand(bottomTarget, terminalCmd, "Terminal"))
+func statusClickScript(bottomTarget, hiddenTarget string) string {
+	return fmt.Sprintf(`x=#{mouse_x}; if [ "$x" -ge 0 ] && [ "$x" -le 4 ]; then %s; elif [ "$x" -ge 6 ] && [ "$x" -le 15 ]; then %s; else :; fi`, showBottomModeCommand(bottomTarget, hiddenTarget, "Git", "Terminal"), showBottomModeCommand(bottomTarget, hiddenTarget, "Terminal", "Git"))
 }
 
-func swapCommand(target, cmd, title string) string {
-	return fmt.Sprintf("tmux respawn-pane -k -t %s %s && tmux select-pane -t %s -T %s", target, shellQuote(cmd), target, shellQuote(title))
+func showBottomModeCommand(visibleTarget, hiddenTarget, showTitle, hideTitle string) string {
+	return fmt.Sprintf("if [ \"$(tmux display-message -p -t %s '#{pane_title}')\" = %s ]; then :; else tmux swap-pane -s %s -t %s && tmux select-pane -t %s -T %s && tmux select-pane -t %s -T %s; fi", shellQuote(visibleTarget), shellQuote(showTitle), shellQuote(hiddenTarget), shellQuote(visibleTarget), shellQuote(visibleTarget), shellQuote(showTitle), shellQuote(hiddenTarget), shellQuote(hideTitle))
+}
+
+func exitCommand(session string) string {
+	return fmt.Sprintf("confirm-before -p 'Exit vibetui? (y/n)' 'kill-session -t %s'", session)
+}
+
+func detachedCleanupHook(session string) string {
+	return fmt.Sprintf("if-shell -F '#{==:#{session_attached},0}' 'kill-session -t %s'", session)
 }
 
 func runTmux(args ...string) error {
