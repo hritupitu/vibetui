@@ -315,11 +315,14 @@ Those extra theme files are harmless and are created automatically by the curren
 - click **`[Terminal]`** in the top status bar to show a shell
 - press **`F1`** for Git
 - press **`F2`** for Terminal
+- Terminal and Git both keep their state when you switch between them
 
 ### Exit
 
-- press **`Ctrl+C`**
+- press **`Ctrl+C`** outside the Terminal pane to exit vibetui
+- inside the **Terminal** pane, **`Ctrl+C`** is passed through as a normal shell interrupt
 - vibetui shows a confirmation prompt before closing the tmux session
+- vibetui tmux sessions auto-clean when they become unattached
 
 ### LazyVim behavior inside vibetui
 

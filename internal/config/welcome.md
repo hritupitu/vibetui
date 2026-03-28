@@ -15,6 +15,7 @@ A VS Code-like terminal IDE. No keybindings required.
 Click any panel to focus it. Use the tab bar at top to switch views.
 Click the status bar buttons at the bottom to jump to a panel.
 `Ctrl+\` cycles focus without the mouse.
+Git and Terminal keep their state when you switch between them.
 
 ## Editor Shortcuts
 
@@ -28,4 +29,4 @@ Click the status bar buttons at the bottom to jump to a panel.
 
 ## Quit
 
-`Ctrl+C` — shows a confirmation prompt before exiting.
+`Ctrl+C` — exits vibetui with confirmation, except in the Terminal pane where it is sent through as a normal interrupt. Unattached vibetui tmux sessions are cleaned up automatically.
