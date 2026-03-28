@@ -145,7 +145,7 @@ Install LazyGit:
 go install github.com/jesseduffield/lazygit@latest
 ```
 
-> On some Linux distros, the packaged Neovim version is very old. If that happens, use a newer package source or Homebrew on Linux.
+> On some Linux distros, the packaged Neovim version is very old. If that happens, use your distro's newer package source, an official Neovim release, or another native package source for your system.
 
 ---
 
