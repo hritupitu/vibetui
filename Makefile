@@ -1,10 +1,10 @@
 .PHONY: build run clean
 
 build:
-	go build -o ode ./...
+	go build -o vibetui .
 
 run: build
-	./ode
+	./vibetui
 
 clean:
-	rm -f ode
+	rm -f vibetui ode
