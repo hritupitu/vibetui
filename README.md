@@ -13,11 +13,15 @@ The goal is a mouse-friendly, VS Code-like terminal workspace without forcing us
 
 ### OpenCode mode
 
-![vibetui OpenCode screenshot](./Screenshot%202026-03-28%20at%2012.35.21%E2%80%AFAM.png)
+![vibetui OpenCode screenshot 1](./Screenshot%202026-03-28%20at%2012.41.15%E2%80%AFAM.png)
+
+![vibetui OpenCode screenshot 2](./Screenshot%202026-03-28%20at%2012.41.23%E2%80%AFAM.png)
 
 ### Claude mode
 
-![vibetui Claude screenshot](./Screenshot%202026-03-28%20at%2012.35.35%E2%80%AFAM.png)
+![vibetui Claude screenshot 1](./Screenshot%202026-03-28%20at%2012.35.21%E2%80%AFAM.png)
+
+![vibetui Claude screenshot 2](./Screenshot%202026-03-28%20at%2012.35.35%E2%80%AFAM.png)
 
 ## What vibetui does
 
