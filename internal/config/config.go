@@ -2,8 +2,10 @@ package config
 
 import (
 	_ "embed"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 //go:embed nvim/init.lua
@@ -16,11 +18,19 @@ var lazygitConfigYML []byte
 var welcomeMD []byte
 
 type Paths struct {
-	NvimInit    string
-	LazygitConf string
-	OpencodeTUI string
-	WelcomeMD   string
-	UserLazygit string
+	NvimInit       string
+	LazygitConf    string
+	OpencodeTUI    string
+	Assistant      string
+	AssistantCmd   string
+	AssistantTitle string
+	SettingsJSON   string
+	WelcomeMD      string
+	UserLazygit    string
+}
+
+type userSettings struct {
+	Assistant string `json:"assistant"`
 }
 
 func Setup() (Paths, error) {
@@ -41,16 +51,20 @@ func Setup() (Paths, error) {
 	}
 
 	p := Paths{
-		NvimInit:    filepath.Join(dir, "init.lua"),
-		LazygitConf: filepath.Join(dir, "lazygit", "config.yml"),
-		OpencodeTUI: filepath.Join(dir, "opencode-tui.json"),
-		WelcomeMD:   filepath.Join(dir, "welcome.md"),
-		UserLazygit: filepath.Join(home, ".config", "lazygit", "config.yml"),
+		NvimInit:     filepath.Join(dir, "init.lua"),
+		LazygitConf:  filepath.Join(dir, "lazygit", "config.yml"),
+		OpencodeTUI:  filepath.Join(dir, "opencode-tui.json"),
+		SettingsJSON: filepath.Join(dir, "settings.json"),
+		WelcomeMD:    filepath.Join(dir, "welcome.md"),
+		UserLazygit:  filepath.Join(home, ".config", "lazygit", "config.yml"),
 	}
 
 	vibetuiCherry := filepath.Join(home, ".config", "opencode", "themes", "vibetui-cherry.json")
 
 	if err := os.WriteFile(p.NvimInit, nvimInitLua, 0o644); err != nil {
+		return Paths{}, err
+	}
+	if err := writeIfAbsent(p.SettingsJSON, []byte("{\n  \"assistant\": \"opencode\"\n}\n")); err != nil {
 		return Paths{}, err
 	}
 	if err := writeIfAbsent(p.LazygitConf, lazygitConfigYML); err != nil {
@@ -121,7 +135,40 @@ func Setup() (Paths, error) {
 		return Paths{}, err
 	}
 
+	p.Assistant, p.AssistantCmd, p.AssistantTitle = resolveAssistantSelection(p.SettingsJSON)
+
 	return p, nil
+}
+
+func resolveAssistantSelection(settingsPath string) (string, string, string) {
+	assistant := "opencode"
+
+	if b, err := os.ReadFile(settingsPath); err == nil {
+		var cfg userSettings
+		if jsonErr := json.Unmarshal(b, &cfg); jsonErr == nil {
+			value := strings.TrimSpace(cfg.Assistant)
+			if value != "" {
+				assistant = value
+			}
+		}
+	}
+
+	if envValue := strings.TrimSpace(os.Getenv("VIBETUI_ASSISTANT")); envValue != "" {
+		assistant = envValue
+	}
+
+	return AssistantProfile(assistant)
+}
+
+func AssistantProfile(value string) (string, string, string) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "claude", "claude-code", "claude code":
+		return "claude", "claude", "Claude"
+	case "opencode", "open-code", "open code":
+		fallthrough
+	default:
+		return "opencode", "opencode", "OpenCode"
+	}
 }
 
 func writeIfAbsent(path string, data []byte) error {

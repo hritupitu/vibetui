@@ -26,11 +26,18 @@ func Launch(cfg config.Paths) error {
 	lazygitCmd := shellWrap(lazygitCommand(cfg))
 	terminalCmd := shellWrap(shell)
 	nvimCmd := shellWrap(fmt.Sprintf("env NVIM_APPNAME=vibetui nvim -u %s", shellQuote(cfg.NvimInit)))
-	claudeCmd := shellWrap("claude")
+	assistantCmd := shellWrap(cfg.AssistantCmd)
+	assistantTitle := cfg.AssistantTitle
+	if assistantCmd == "" {
+		assistantCmd = shellWrap("opencode")
+	}
+	if assistantTitle == "" {
+		assistantTitle = "OpenCode"
+	}
 
 	commands := [][]string{
 		{"new-session", "-d", "-s", session, "-n", "vibetui", nvimCmd},
-		{"split-window", "-t", window + ".0", "-h", "-p", "40", claudeCmd},
+		{"split-window", "-t", window + ".0", "-h", "-p", "40", assistantCmd},
 		{"select-pane", "-t", window + ".0"},
 		{"split-window", "-t", window + ".0", "-v", "-p", "25", lazygitCmd},
 		{"select-pane", "-t", window + ".0"},
@@ -50,7 +57,7 @@ func Launch(cfg config.Paths) error {
 		{"set-window-option", "-t", window, "pane-border-status", "top"},
 		{"set-window-option", "-t", window, "pane-border-format", "#{pane_title}"},
 		{"select-pane", "-t", window + ".0", "-T", "LazyVim"},
-		{"select-pane", "-t", window + ".2", "-T", "Claude"},
+		{"select-pane", "-t", window + ".2", "-T", assistantTitle},
 		{"select-pane", "-t", bottomTarget, "-T", "Git"},
 		{"bind-key", "-n", "F1", "run-shell", swapCommand(bottomTarget, lazygitCmd, "Git")},
 		{"bind-key", "-n", "F2", "run-shell", swapCommand(bottomTarget, terminalCmd, "Terminal")},
