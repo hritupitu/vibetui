@@ -4,7 +4,7 @@
 
 It launches:
 - **LazyVim** on the left
-- **Claude Code** on the right
+- **OpenCode** on the right
 - **LazyGit** on the bottom, with a one-click swap to a plain terminal
 
 The goal is a mouse-friendly, VS Code-like terminal workspace without forcing users to memorize a lot of Vim or tmux commands.
@@ -18,7 +18,7 @@ When you run `vibetui`, it:
 3. starts a fresh tmux session
 4. opens a 3-pane layout:
    - **left:** LazyVim
-   - **right:** Claude Code (`claude`)
+   - **right:** OpenCode (`opencode`)
    - **bottom:** LazyGit, swappable with Terminal
 
 ## Requirements
@@ -28,10 +28,53 @@ These tools must be installed and available on your `PATH`:
 - `tmux`
 - `nvim`
 - `lazygit`
-- `claude`
+- one assistant CLI: `opencode` or `claude`
 - `go` (to build/install `vibetui`)
 
 > `vibetui` shells out to these CLIs directly. If one is missing, the app will not work correctly.
+
+## Assistant selection (OpenCode or Claude)
+
+`vibetui` now supports both assistants for the right pane.
+
+Quick launch commands:
+
+```bash
+vibetui opencode
+vibetui claude
+```
+
+Default behavior:
+- uses **OpenCode**
+
+Persistent preference file:
+
+Path: `~/.config/vibetui/settings.json`
+
+```json
+{
+  "assistant": "opencode"
+}
+```
+
+Valid values:
+- `opencode`
+- `claude`
+
+Temporary override (one shell/session):
+
+```bash
+VIBETUI_ASSISTANT=claude vibetui
+VIBETUI_ASSISTANT=opencode vibetui
+```
+
+Priority order:
+1. CLI argument (`vibetui opencode` / `vibetui claude`)
+2. `VIBETUI_ASSISTANT` environment variable
+3. `~/.config/vibetui/settings.json`
+
+If you prefer Claude Code, install it from:
+- https://code.claude.com/docs/en/setup
 
 ---
 
@@ -54,17 +97,13 @@ brew install lazygit
 brew install go
 ```
 
-Install Claude Code:
+Install OpenCode:
 
-```bash
-curl -fsSL https://claude.ai/install.sh | bash
-```
+Please follow the official OpenCode installation instructions for your platform:
 
-Alternative Claude install on macOS:
+- https://opencode.ai
 
-```bash
-brew install --cask claude-code
-```
+If `opencode` still is not found after install, make sure its binary path is added to your shell `PATH`.
 
 ### Linux
 
@@ -82,11 +121,9 @@ Install Go using the official instructions:
 
 - https://go.dev/doc/install
 
-Install Claude Code:
+Install OpenCode from the official instructions:
 
-```bash
-curl -fsSL https://claude.ai/install.sh | bash
-```
+- https://opencode.ai
 
 Install LazyGit:
 
@@ -98,23 +135,15 @@ go install github.com/jesseduffield/lazygit@latest
 
 ---
 
-## 2) Authenticate Claude Code
+## 2) Set up OpenCode
 
 Run:
 
 ```bash
-claude
+opencode
 ```
 
-On first launch, Claude Code opens a browser so you can sign in.
-
-If the browser does not open automatically, follow the CLI prompt and copy the login URL manually.
-
-Claude Code requires a supported Anthropic plan/account.
-
-More info:
-- https://code.claude.com/docs/en/setup
-- https://code.claude.com/docs/en/authentication
+Finish any first-run setup/auth prompts shown by OpenCode in your terminal.
 
 ---
 
@@ -126,7 +155,7 @@ Run this before installing `vibetui`:
 tmux -V
 nvim --version
 lazygit --version
-claude --version
+opencode --version
 go version
 ```
 
@@ -244,6 +273,7 @@ This currently includes:
 
 - `~/.config/vibetui/init.lua`
 - `~/.config/vibetui/lazygit/config.yml`
+- `~/.config/vibetui/settings.json`
 - `~/.config/vibetui/welcome.md`
 
 `vibetui` also writes:
@@ -260,8 +290,10 @@ Those extra theme files are harmless and are created automatically by the curren
 ### Pane layout
 
 - **Left:** LazyVim
-- **Right:** Claude Code
+- **Right:** OpenCode
 - **Bottom:** LazyGit or Terminal
+
+> Right-pane title changes automatically based on your selected assistant.
 
 ### Bottom pane switching
 
@@ -328,7 +360,23 @@ Install tmux and verify:
 tmux -V
 ```
 
-### `claude: command not found`
+### `opencode: command not found`
+
+Install OpenCode and verify:
+
+```bash
+opencode --version
+```
+
+Then run:
+
+```bash
+opencode
+```
+
+to complete first-run setup.
+
+### `claude: command not found` after setting `"assistant": "claude"`
 
 Install Claude Code and verify:
 
@@ -342,7 +390,7 @@ Then run:
 claude
 ```
 
-to complete login.
+to complete login/setup.
 
 ### `lazygit: command not found`
 
@@ -364,15 +412,15 @@ nvim --version
 
 Use a modern terminal with good tmux support and truecolor enabled. Ghostty is the intended target setup.
 
-### Claude pane opens but is not authenticated
+### OpenCode pane opens but is not authenticated
 
 Run this once outside vibetui:
 
 ```bash
-claude
+opencode
 ```
 
-and finish the browser login flow.
+and complete the setup/auth flow shown in the CLI.
 
 ---
 
