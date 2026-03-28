@@ -18,6 +18,47 @@ vim.g.lazyvim_picker   = "telescope"
 vim.g.snacks_animate   = false
 vim.g.autoformat       = false
 
+local function detect_parsers()
+  local cwd = vim.loop.cwd()
+  local map = {
+    ["*.go"] = "go",
+    ["*.lua"] = "lua",
+    ["*.py"] = "python",
+    ["*.rs"] = "rust",
+    ["*.js"] = "javascript",
+    ["*.jsx"] = "javascript",
+    ["*.ts"] = "typescript",
+    ["*.tsx"] = "tsx",
+    ["*.json"] = "json",
+    ["*.yaml"] = "yaml",
+    ["*.yml"] = "yaml",
+    ["*.toml"] = "toml",
+    ["*.md"] = "markdown",
+    ["*.sh"] = "bash",
+    ["Dockerfile"] = "dockerfile",
+  }
+  local seen = {
+    bash = true,
+    vim = true,
+    lua = true,
+    markdown = true,
+    markdown_inline = true,
+    query = true,
+  }
+  for pattern, parser in pairs(map) do
+    local matches = vim.fn.globpath(cwd, "**/" .. pattern, false, true)
+    if #matches > 0 then
+      seen[parser] = true
+    end
+  end
+  local out = {}
+  for parser in pairs(seen) do
+    table.insert(out, parser)
+  end
+  table.sort(out)
+  return out
+end
+
 require("lazy").setup({
   { "LazyVim/LazyVim", import = "lazyvim.plugins" },
 
@@ -25,6 +66,17 @@ require("lazy").setup({
     "folke/snacks.nvim",
     opts = {
       dashboard = { enabled = false },
+    },
+  },
+
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    opts = {
+      ensure_installed = detect_parsers(),
+      auto_install = true,
+      highlight = { enable = true },
+      indent = { enable = true },
     },
   },
 
