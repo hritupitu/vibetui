@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+          - goos: darwin
+            goarch: amd64
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - goos: linux
+            goarch: amd64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - goos: linux
+            goarch: arm64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist/${{ matrix.target }}
+          go build -trimpath -ldflags="-s -w" -o dist/${{ matrix.target }}/vibetui .
+
+      - name: Package
+        run: |
+          tar czf vibetui-${{ matrix.target }}.tar.gz -C dist/${{ matrix.target }} vibetui
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vibetui-${{ matrix.target }}
+          path: vibetui-${{ matrix.target }}.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: vibetui-*.tar.gz
