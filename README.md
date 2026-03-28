@@ -179,7 +179,25 @@ If any command fails, fix that first.
 
 ## 4) Install vibetui
 
-### Option A: build from a local clone
+### Option A: install from GitHub Releases
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hritupitu/vibetui/main/install.sh | sh
+```
+
+This installs the latest release binary to:
+
+```bash
+~/.local/bin/vibetui
+```
+
+You can override the install directory like this:
+
+```bash
+VIBETUI_INSTALL_DIR="$HOME/bin" curl -fsSL https://raw.githubusercontent.com/hritupitu/vibetui/main/install.sh | sh
+```
+
+### Option B: build from a local clone
 
 Clone the repo:
 
@@ -200,7 +218,7 @@ Run it directly:
 ./vibetui
 ```
 
-### Option B: install globally from your local clone
+### Option C: install globally from your local clone
 
 From the repo root:
 
@@ -214,7 +232,7 @@ That installs the binary into your Go bin directory, usually:
 ~/go/bin
 ```
 
-### Option C: install globally from GitHub
+### Option D: install globally from GitHub
 
 ```bash
 go install github.com/hritupitu/vibetui@latest
@@ -460,6 +478,22 @@ Clean local build artifact:
 ```bash
 make clean
 ```
+
+## Releases
+
+GitHub Releases are created automatically when you push a version tag:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+That workflow builds release archives for:
+
+- macOS Apple Silicon
+- macOS Intel
+- Linux x86_64
+- Linux ARM64
 
 ---
 
