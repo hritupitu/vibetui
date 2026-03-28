@@ -1,0 +1,32 @@
+gui:
+  mouseEvents: true
+  sidePanelWidth: 0.30
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 3
+  mainPanelSplitMode: flexible
+  border: rounded
+  showFileTree: true
+  showCommandLog: false
+  showRandomTip: false
+  showBottomLine: true
+  showPanelJumps: true
+  scrollHeight: 3
+  scrollPastBottom: true
+  scrollOffMargin: 3
+  nerdFontsVersion: "3"
+  showFileIcons: true
+  commitHashLength: 8
+  showBranchCommitHash: true
+
+git:
+  autoFetch: true
+  autoRefresh: true
+  fetchAll: true
+  paging:
+    colorArg: always
+
+os:
+  editPreset: "nvim"
+
+update:
+  method: never
