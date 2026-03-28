@@ -11,7 +11,7 @@ import (
 type appState int
 
 const (
-	stateNormal      appState = iota
+	stateNormal appState = iota
 	stateConfirmQuit
 	stateOpenMD
 )
@@ -19,7 +19,7 @@ const (
 type ViewType int
 
 const (
-	ViewIDE      ViewType = iota
+	ViewIDE ViewType = iota
 	ViewTerminal
 	ViewGit
 	ViewDocs
@@ -28,7 +28,7 @@ const (
 type FocusType int
 
 const (
-	FocusLazyVim  FocusType = iota
+	FocusLazyVim FocusType = iota
 	FocusOpenCode
 	FocusLazyGit
 	FocusTerminal
@@ -95,8 +95,8 @@ func New(cfg config.Paths) Model {
 		outputCh: make(chan pane.OutputMsg, 64),
 		tabBar:   ui.NewTabBar([]string{"  Editor", "  Terminal", "  Git", "  Docs"}),
 		statusBar: ui.NewStatusBar(
-			[]string{"lazyvim", "opencode", "lazygit", "terminal", "markdown"},
-			[]string{"Editor", "AI", "Git", "Terminal", "Docs"},
+			[]string{"lazyvim", "claude", "lazygit", "terminal", "markdown"},
+			[]string{"Editor", "Claude", "Git", "Terminal", "Docs"},
 		),
 	}
 }
@@ -133,7 +133,7 @@ func focusIDToType(id string) (FocusType, bool) {
 	switch id {
 	case "lazyvim":
 		return FocusLazyVim, true
-	case "opencode":
+	case "claude":
 		return FocusOpenCode, true
 	case "lazygit":
 		return FocusLazyGit, true

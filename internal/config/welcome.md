@@ -7,7 +7,7 @@ A VS Code-like terminal IDE. No keybindings required.
 | Panel | What |
 |-------|------|
 | Editor (left) | LazyVim — full editor with file tree |
-| AI (right) | OpenCode AI assistant |
+| Claude (right) | Claude Code assistant |
 | Git (bottom) | LazyGit — version control |
 | Docs (this) | Melo — markdown viewer |
 

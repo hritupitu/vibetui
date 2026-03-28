@@ -212,7 +212,7 @@ func (p *Pane) Close() {
 }
 
 func (p *Pane) normalizeForeground(fg, bg vt10x.Color) vt10x.Color {
-	if p.ID != "opencode" {
+	if p.ID != "claude" {
 		return fg
 	}
 	switch fg {

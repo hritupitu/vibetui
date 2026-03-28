@@ -121,8 +121,7 @@ func (m *Model) startPanes() error {
 		return err
 	}
 
-	m.openCode = pane.New("opencode", " AI", "opencode").
-		WithEnv("OPENCODE_TUI_CONFIG=" + m.cfg.OpencodeTUI)
+	m.openCode = pane.New("claude", " Claude", "claude")
 	if err := m.openCode.Start(l.ocIW, l.ocIH, m.outputCh); err != nil {
 		return err
 	}
