@@ -471,5 +471,3 @@ The app entrypoint calls:
 
 - `config.Setup()`
 - `tmuxsession.Launch(...)`
-
-So the current user-facing product is the tmux launcher, not the older Bubble Tea prototype still present in the repo.
