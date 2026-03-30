@@ -11,13 +11,20 @@ import (
 	"github.com/creack/pty"
 )
 
+// ClaudePaneID is the stable pane ID used for the assistant pane.
+// It is exported so callers can reference the same identifier when
+// constructing or looking up the assistant pane.
+const ClaudePaneID = "claude"
+
 // Pane manages a subprocess running inside a PTY with a VT100 virtual screen.
 // All output from the subprocess is processed by the vt10x emulator so Cell()
-// calls accurately reflect what the program has drawn.  User input is forwarded
-// via Write(); Render() produces an ANSI string of exactly Width×Height
-// characters ready to be wrapped in a lipgloss border.
+// calls accurately reflect what the program has drawn. User input is forwarded
+// via Write(); Render() produces an ANSI string representing the pane's
+// Width-by-Height cell grid, ready to be wrapped in a lipgloss border.
 type Pane struct {
-	ID    string
+	// ID uniquely identifies the pane within the app.
+	ID string
+	// Title is the user-visible pane title shown in the pane border.
 	Title string
 
 	cmd      string
@@ -34,10 +41,12 @@ type Pane struct {
 	running bool
 }
 
+// New constructs a pane definition for cmd without starting the subprocess.
 func New(id, title, cmd string, args ...string) *Pane {
 	return &Pane{ID: id, Title: title, cmd: cmd, args: args}
 }
 
+// WithEnv appends extra environment variables to the pane subprocess.
 func (p *Pane) WithEnv(vars ...string) *Pane {
 	p.extraEnv = append(p.extraEnv, vars...)
 	return p
@@ -69,7 +78,7 @@ func (p *Pane) Start(width, height int, outputCh chan<- OutputMsg) error {
 	// Create the VT emulator backed by the PTY file (acts as ReadWriteCloser).
 	vt, err := vt10x.Create(&p.state, f)
 	if err != nil {
-		_ = f.Close()
+		_ = f.Close() // best-effort cleanup; original error takes precedence
 		return fmt.Errorf("pane %s: create vt: %w", p.ID, err)
 	}
 	p.vt = vt
@@ -117,7 +126,7 @@ func (p *Pane) Resize(width, height int) {
 	p.mu.Unlock()
 
 	if f != nil {
-		_ = pty.Setsize(f, &pty.Winsize{
+		_ = pty.Setsize(f, &pty.Winsize{ // Setsize rarely fails; VT resize below keeps state consistent
 			Rows: uint16(height),
 			Cols: uint16(width),
 		})
@@ -206,13 +215,13 @@ func (p *Pane) Close() {
 
 	p.running = false
 	if p.ptyFile != nil {
-		_ = p.ptyFile.Close()
+		_ = p.ptyFile.Close() // best-effort; Close() is called during shutdown, error is unactionable
 		p.ptyFile = nil
 	}
 }
 
 func (p *Pane) normalizeForeground(fg, bg vt10x.Color) vt10x.Color {
-	if p.ID != "claude" {
+	if p.ID != ClaudePaneID {
 		return fg
 	}
 	switch fg {
@@ -223,8 +232,6 @@ func (p *Pane) normalizeForeground(fg, bg vt10x.Color) vt10x.Color {
 	}
 	return fg
 }
-
-// ─── color helpers ────────────────────────────────────────────────────────────
 
 // vtColorToANSI converts a vt10x.Color to an ANSI SGR parameter string.
 // bg=true produces background codes (40–47, 100–107); bg=false gives foreground.

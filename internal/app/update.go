@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"github.com/hritupitu/vibetui/internal/pane"
 )
 
+// Update handles window, keyboard, mouse, and pane-output events for the app.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
@@ -92,7 +92,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if p := m.currentPane(); p != nil {
 			data := keyToBytes(msg)
 			if len(data) > 0 {
-				_ = p.Write(data)
+				_ = p.Write(data) // write failure means the pane subprocess exited; ExitMsg will follow
 			}
 		}
 		return m, nil
@@ -121,7 +121,7 @@ func (m *Model) startPanes() error {
 		return err
 	}
 
-	m.openCode = pane.New("claude", " Claude", "claude")
+	m.openCode = pane.New(pane.ClaudePaneID, " Claude", "claude")
 	if err := m.openCode.Start(l.ocIW, l.ocIH, m.outputCh); err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (m *Model) startPanes() error {
 
 	if meloAvailable() {
 		m.melo = pane.New("markdown", " Docs", "melo", m.meloFile)
-		_ = m.melo.Start(l.ocIW, l.ocIH, m.outputCh)
+		_ = m.melo.Start(l.ocIW, l.ocIH, m.outputCh) // melo is optional; failure is surfaced via the Docs pane placeholder
 	}
 
 	return nil
@@ -174,7 +174,7 @@ func (m *Model) openMDFile(path string) {
 		m.melo.Close()
 	}
 	m.melo = pane.New("markdown", " Docs", "melo", path)
-	_ = m.melo.Start(l.ocIW, l.ocIH, m.outputCh)
+	_ = m.melo.Start(l.ocIW, l.ocIH, m.outputCh) // melo is optional; failure is surfaced via the Docs pane placeholder
 
 	m.view = ViewDocs
 	m.focus = FocusMarkdown
@@ -294,7 +294,7 @@ func (m *Model) handlePaneMouse(msg tea.MouseMsg) {
 	}
 	m.focus = focus
 	if data := mouseToBytes(msg, localX, localY); len(data) > 0 {
-		_ = p.Write(data)
+		_ = p.Write(data) // write failure means the pane subprocess exited; ExitMsg will follow
 	}
 }
 
@@ -348,153 +348,4 @@ func clampMouse(v, max int) int {
 		return max - 1
 	}
 	return v
-}
-
-func mouseToBytes(msg tea.MouseMsg, x, y int) []byte {
-	b := 0
-	switch msg.Button {
-	case tea.MouseButtonLeft:
-		b = 0
-	case tea.MouseButtonMiddle:
-		b = 1
-	case tea.MouseButtonRight:
-		b = 2
-	case tea.MouseButtonWheelUp:
-		b = 64
-	case tea.MouseButtonWheelDown:
-		b = 65
-	case tea.MouseButtonWheelLeft:
-		b = 66
-	case tea.MouseButtonWheelRight:
-		b = 67
-	case tea.MouseButtonNone:
-		if msg.Action != tea.MouseActionMotion {
-			return nil
-		}
-		b = 35
-	default:
-		return nil
-	}
-	if msg.Shift {
-		b += 4
-	}
-	if msg.Alt {
-		b += 8
-	}
-	if msg.Ctrl {
-		b += 16
-	}
-	if msg.Action == tea.MouseActionMotion && msg.Button != tea.MouseButtonWheelUp && msg.Button != tea.MouseButtonWheelDown && msg.Button != tea.MouseButtonWheelLeft && msg.Button != tea.MouseButtonWheelRight {
-		b += 32
-	}
-	suffix := 'M'
-	if msg.Action == tea.MouseActionRelease {
-		suffix = 'm'
-	}
-	return []byte(fmt.Sprintf("\x1b[<%d;%d;%d%c", b, x+1, y+1, suffix))
-}
-
-func keyToBytes(msg tea.KeyMsg) []byte {
-	if msg.Type == tea.KeyRunes {
-		return []byte(string(msg.Runes))
-	}
-	switch msg.Type {
-	case tea.KeyEnter:
-		return []byte{'\r'}
-	case tea.KeyBackspace:
-		return []byte{127}
-	case tea.KeyDelete:
-		return []byte{'\x1b', '[', '3', '~'}
-	case tea.KeyTab:
-		return []byte{'\t'}
-	case tea.KeyEsc:
-		return []byte{'\x1b'}
-	case tea.KeySpace:
-		return []byte{' '}
-	case tea.KeyUp:
-		return []byte{'\x1b', '[', 'A'}
-	case tea.KeyDown:
-		return []byte{'\x1b', '[', 'B'}
-	case tea.KeyRight:
-		return []byte{'\x1b', '[', 'C'}
-	case tea.KeyLeft:
-		return []byte{'\x1b', '[', 'D'}
-	case tea.KeyHome:
-		return []byte{'\x1b', '[', 'H'}
-	case tea.KeyEnd:
-		return []byte{'\x1b', '[', 'F'}
-	case tea.KeyPgUp:
-		return []byte{'\x1b', '[', '5', '~'}
-	case tea.KeyPgDown:
-		return []byte{'\x1b', '[', '6', '~'}
-	case tea.KeyCtrlA:
-		return []byte{1}
-	case tea.KeyCtrlB:
-		return []byte{2}
-	case tea.KeyCtrlD:
-		return []byte{4}
-	case tea.KeyCtrlE:
-		return []byte{5}
-	case tea.KeyCtrlF:
-		return []byte{6}
-	case tea.KeyCtrlG:
-		return []byte{7}
-	case tea.KeyCtrlH:
-		return []byte{8}
-	case tea.KeyCtrlJ:
-		return []byte{10}
-	case tea.KeyCtrlK:
-		return []byte{11}
-	case tea.KeyCtrlL:
-		return []byte{12}
-	case tea.KeyCtrlN:
-		return []byte{14}
-	case tea.KeyCtrlO:
-		return []byte{15}
-	case tea.KeyCtrlP:
-		return []byte{16}
-	case tea.KeyCtrlQ:
-		return []byte{17}
-	case tea.KeyCtrlR:
-		return []byte{18}
-	case tea.KeyCtrlS:
-		return []byte{19}
-	case tea.KeyCtrlT:
-		return []byte{20}
-	case tea.KeyCtrlU:
-		return []byte{21}
-	case tea.KeyCtrlV:
-		return []byte{22}
-	case tea.KeyCtrlX:
-		return []byte{24}
-	case tea.KeyCtrlY:
-		return []byte{25}
-	case tea.KeyCtrlZ:
-		return []byte{26}
-	case tea.KeyF1:
-		return []byte{'\x1b', 'O', 'P'}
-	case tea.KeyF2:
-		return []byte{'\x1b', 'O', 'Q'}
-	case tea.KeyF3:
-		return []byte{'\x1b', 'O', 'R'}
-	case tea.KeyF4:
-		return []byte{'\x1b', 'O', 'S'}
-	case tea.KeyF5:
-		return []byte{'\x1b', '[', '1', '5', '~'}
-	case tea.KeyF6:
-		return []byte{'\x1b', '[', '1', '7', '~'}
-	case tea.KeyF7:
-		return []byte{'\x1b', '[', '1', '8', '~'}
-	case tea.KeyF8:
-		return []byte{'\x1b', '[', '1', '9', '~'}
-	case tea.KeyF9:
-		return []byte{'\x1b', '[', '2', '0', '~'}
-	case tea.KeyF10:
-		return []byte{'\x1b', '[', '2', '1', '~'}
-	case tea.KeyF11:
-		return []byte{'\x1b', '[', '2', '3', '~'}
-	case tea.KeyF12:
-		return []byte{'\x1b', '[', '2', '4', '~'}
-	}
-	return nil
 }

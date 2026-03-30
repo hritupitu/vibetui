@@ -8,6 +8,7 @@ import (
 	"github.com/hritupitu/vibetui/internal/ui"
 )
 
+// View renders the current app state as a Bubble Tea screen.
 func (m Model) View() string {
 	if !m.ready {
 		return "Initializing…"
@@ -159,6 +160,8 @@ func spliceTopBorderTitle(box, title string, focused bool) string {
 		suffix = topLine[closingIdx+len(closeCorner):]
 	}
 
+	// Keep any ANSI prefix that lipgloss injected before the visible border runes
+	// while replacing a short visible segment of the top border with the title.
 	styledTitle := ui.PaneTitleStyle(title, focused)
 	dashesAfter := dashCount - titleW - 2
 	newTop := prefix + openCorner + dash + styledTitle + prefix + strings.Repeat(dash, dashesAfter) + closeCorner + suffix
