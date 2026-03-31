@@ -6,19 +6,28 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// StatusButton describes a clickable status bar item and the pane it targets.
 type StatusButton struct {
-	Label  string
+	// Label is the button caption.
+	Label string
+	// PaneID is the pane identifier returned when the button is clicked.
 	PaneID string
+	// StartX is the inclusive left x-coordinate used for hit testing.
 	StartX int
-	EndX   int
+	// EndX is the inclusive right x-coordinate used for hit testing.
+	EndX int
 }
 
+// StatusBar renders the bottom status row and tracks click hit boxes.
 type StatusBar struct {
-	Buttons    []StatusButton
+	// Buttons is the ordered list of pane buttons displayed in the bar.
+	Buttons []StatusButton
+	// ActivePane is the pane ID currently rendered as active.
 	ActivePane string
 	openMDBtn  StatusButton
 }
 
+// NewStatusBar creates a status bar with one button per pane ID / label pair.
 func NewStatusBar(paneIDs, labels []string) StatusBar {
 	btns := make([]StatusButton, len(paneIDs))
 	for i := range paneIDs {
@@ -27,6 +36,7 @@ func NewStatusBar(paneIDs, labels []string) StatusBar {
 	return StatusBar{Buttons: btns}
 }
 
+// Render draws the status bar and updates button hit boxes for click handling.
 func (sb *StatusBar) Render(width int, activePaneID string, docsView bool) string {
 	sb.ActivePane = activePaneID
 
@@ -75,6 +85,7 @@ func (sb *StatusBar) Render(width int, activePaneID string, docsView bool) strin
 	return leftStr + filler + hint
 }
 
+// HitTest returns the pane ID at x, or an empty string when no button matches.
 func (sb *StatusBar) HitTest(x int) string {
 	for _, b := range sb.Buttons {
 		if x >= b.StartX && x <= b.EndX {

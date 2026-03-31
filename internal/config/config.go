@@ -17,22 +17,35 @@ var lazygitConfigYML []byte
 //go:embed welcome.md
 var welcomeMD []byte
 
+// Paths contains the resolved config files and assistant metadata used at
+// runtime.
 type Paths struct {
-	NvimInit       string
-	LazygitConf    string
-	OpencodeTUI    string
-	Assistant      string
-	AssistantCmd   string
+	// NvimInit is the vibetui-specific Neovim init.lua path.
+	NvimInit string
+	// LazygitConf is the bundled LazyGit config path written by vibetui.
+	LazygitConf string
+	// OpencodeTUI is the assistant TUI config path consumed by OpenCode.
+	OpencodeTUI string
+	// Assistant is the normalized assistant selection identifier.
+	Assistant string
+	// AssistantCmd is the executable name launched for the assistant pane.
+	AssistantCmd string
+	// AssistantTitle is the pane title shown for the assistant pane.
 	AssistantTitle string
-	SettingsJSON   string
-	WelcomeMD      string
-	UserLazygit    string
+	// SettingsJSON stores the persisted vibetui user settings.
+	SettingsJSON string
+	// WelcomeMD is the default markdown document opened in docs mode.
+	WelcomeMD string
+	// UserLazygit is the user's existing LazyGit config, if present.
+	UserLazygit string
 }
 
 type userSettings struct {
 	Assistant string `json:"assistant"`
 }
 
+// Setup writes the bundled vibetui configuration and returns the resolved
+// runtime paths.
 func Setup() (Paths, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -160,6 +173,8 @@ func resolveAssistantSelection(settingsPath string) (string, string, string) {
 	return AssistantProfile(assistant)
 }
 
+// AssistantProfile normalizes an assistant selection and returns the stored
+// assistant key, executable name, and pane title.
 func AssistantProfile(value string) (string, string, string) {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "claude", "claude-code", "claude code":

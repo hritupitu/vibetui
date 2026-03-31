@@ -16,22 +16,33 @@ const (
 	stateOpenMD
 )
 
+// ViewType selects which bottom-area layout the app renders.
 type ViewType int
 
 const (
+	// ViewIDE shows the editor, assistant, and git panes together.
 	ViewIDE ViewType = iota
+	// ViewTerminal swaps the bottom git pane for the shell pane.
 	ViewTerminal
+	// ViewGit expands the git pane to fill the content area.
 	ViewGit
+	// ViewDocs shows the markdown preview pane beside the editor.
 	ViewDocs
 )
 
+// FocusType identifies which pane receives keyboard and mouse input.
 type FocusType int
 
 const (
+	// FocusLazyVim targets the editor pane.
 	FocusLazyVim FocusType = iota
+	// FocusOpenCode targets the assistant pane.
 	FocusOpenCode
+	// FocusLazyGit targets the git pane.
 	FocusLazyGit
+	// FocusTerminal targets the shell pane.
 	FocusTerminal
+	// FocusMarkdown targets the markdown preview pane.
 	FocusMarkdown
 )
 
@@ -52,6 +63,10 @@ type layout struct {
 	lgIW, lgIH int
 }
 
+// Model is vibetui's Bubble Tea model.
+//
+// It tracks layout, pane lifecycle, focused pane, and modal UI state while the
+// individual pane processes are managed by the pane package.
 type Model struct {
 	width, height int
 	ready         bool
@@ -81,6 +96,7 @@ type Model struct {
 	lay layout
 }
 
+// New builds a Model configured to launch panes from cfg.
 func New(cfg config.Paths) Model {
 	ti := textinput.New()
 	ti.Placeholder = "path/to/file.md"
@@ -95,12 +111,13 @@ func New(cfg config.Paths) Model {
 		outputCh: make(chan pane.OutputMsg, 64),
 		tabBar:   ui.NewTabBar([]string{"  Editor", "  Terminal", "  Git", "  Docs"}),
 		statusBar: ui.NewStatusBar(
-			[]string{"lazyvim", "claude", "lazygit", "terminal", "markdown"},
+			[]string{"lazyvim", pane.ClaudePaneID, "lazygit", "terminal", "markdown"},
 			[]string{"Editor", "Claude", "Git", "Terminal", "Docs"},
 		),
 	}
 }
 
+// Init implements tea.Model.
 func (m Model) Init() tea.Cmd {
 	return nil
 }
@@ -133,7 +150,7 @@ func focusIDToType(id string) (FocusType, bool) {
 	switch id {
 	case "lazyvim":
 		return FocusLazyVim, true
-	case "claude":
+	case pane.ClaudePaneID:
 		return FocusOpenCode, true
 	case "lazygit":
 		return FocusLazyGit, true

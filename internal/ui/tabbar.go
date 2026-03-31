@@ -8,14 +8,19 @@ import (
 
 // Tab represents a clickable tab in the tab bar.
 type Tab struct {
-	Label  string
+	// Label is the tab caption.
+	Label string
+	// StartX is the inclusive left x-coordinate used for hit testing.
 	StartX int
-	EndX   int
+	// EndX is the inclusive right x-coordinate used for hit testing.
+	EndX int
 }
 
 // TabBar renders the top tab bar and tracks tab x-positions for click detection.
 type TabBar struct {
-	Tabs       []Tab
+	// Tabs is the ordered list of rendered tabs.
+	Tabs []Tab
+	// ActiveIdx is the index of the active tab in Tabs.
 	ActiveIdx  int
 	totalWidth int
 }

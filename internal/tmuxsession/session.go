@@ -10,6 +10,8 @@ import (
 	"github.com/hritupitu/vibetui/internal/config"
 )
 
+// Launch creates and enters a tmux session configured with vibetui's pane
+// layout and key bindings.
 func Launch(cfg config.Paths) error {
 	if _, err := exec.LookPath("tmux"); err != nil {
 		return fmt.Errorf("tmux is required: %w", err)
@@ -72,7 +74,7 @@ func Launch(cfg config.Paths) error {
 
 	for _, args := range commands {
 		if err := runTmux(args...); err != nil {
-			_ = runTmux("kill-session", "-t", session)
+			_ = runTmux("kill-session", "-t", session) // best-effort cleanup; original setup error takes precedence
 			return err
 		}
 	}
