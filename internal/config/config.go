@@ -41,7 +41,8 @@ type Paths struct {
 }
 
 type userSettings struct {
-	Assistant string `json:"assistant"`
+	Assistant     string `json:"assistant"`
+	OpencodeTheme string `json:"opencodeTheme"`
 }
 
 // Setup writes the bundled vibetui configuration and returns the resolved
@@ -56,7 +57,6 @@ func Setup() (Paths, error) {
 
 	for _, d := range []string{
 		filepath.Join(dir, "lazygit"),
-		filepath.Join(home, ".config", "opencode", "themes"),
 	} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			return Paths{}, err
@@ -83,7 +83,14 @@ func Setup() (Paths, error) {
 	if err := writeIfAbsent(p.LazygitConf, lazygitConfigYML); err != nil {
 		return Paths{}, err
 	}
-	if err := os.WriteFile(vibetuiCherry, []byte(`{
+	if err := os.WriteFile(p.WelcomeMD, welcomeMD, 0o644); err != nil {
+		return Paths{}, err
+	}
+	if theme := resolveOpencodeTheme(p.SettingsJSON); theme != "" {
+		if err := os.MkdirAll(filepath.Join(home, ".config", "opencode", "themes"), 0o755); err != nil {
+			return Paths{}, err
+		}
+		if err := os.WriteFile(vibetuiCherry, []byte(`{
   "$schema": "https://opencode.ai/theme.json",
   "theme": {
     "primary": "#ffffff",
@@ -139,13 +146,11 @@ func Setup() (Paths, error) {
   }
 }
 `), 0o644); err != nil {
-		return Paths{}, err
-	}
-	if err := os.WriteFile(p.OpencodeTUI, []byte("{\n  \"theme\": \"vibetui-cherry\"\n}\n"), 0o644); err != nil {
-		return Paths{}, err
-	}
-	if err := os.WriteFile(p.WelcomeMD, welcomeMD, 0o644); err != nil {
-		return Paths{}, err
+			return Paths{}, err
+		}
+		if err := os.WriteFile(p.OpencodeTUI, []byte("{\n  \"theme\": \""+theme+"\"\n}\n"), 0o644); err != nil {
+			return Paths{}, err
+		}
 	}
 
 	p.Assistant, p.AssistantCmd, p.AssistantTitle = resolveAssistantSelection(p.SettingsJSON)
@@ -171,6 +176,29 @@ func resolveAssistantSelection(settingsPath string) (string, string, string) {
 	}
 
 	return AssistantProfile(assistant)
+}
+
+func resolveOpencodeTheme(settingsPath string) string {
+	theme := ""
+
+	if b, err := os.ReadFile(settingsPath); err == nil {
+		var cfg userSettings
+		if jsonErr := json.Unmarshal(b, &cfg); jsonErr == nil {
+			theme = strings.TrimSpace(cfg.OpencodeTheme)
+		}
+	}
+
+	if envValue := strings.TrimSpace(os.Getenv("VIBETUI_OPENCODE_THEME")); envValue != "" {
+		theme = envValue
+	}
+
+	if strings.EqualFold(theme, "default") || strings.EqualFold(theme, "none") {
+		return ""
+	}
+	if strings.EqualFold(theme, "vibetui-cherry") {
+		return "vibetui-cherry"
+	}
+	return ""
 }
 
 // AssistantProfile normalizes an assistant selection and returns the stored
