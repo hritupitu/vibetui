@@ -86,7 +86,12 @@ func Setup() (Paths, error) {
 	if err := os.WriteFile(p.WelcomeMD, welcomeMD, 0o644); err != nil {
 		return Paths{}, err
 	}
-	if theme := resolveOpencodeTheme(p.SettingsJSON); theme != "" {
+	theme := resolveOpencodeTheme(p.SettingsJSON)
+	if theme == "" {
+		if err := os.Remove(p.OpencodeTUI); err != nil && !os.IsNotExist(err) {
+			return Paths{}, err
+		}
+	} else {
 		if err := os.MkdirAll(filepath.Join(home, ".config", "opencode", "themes"), 0o755); err != nil {
 			return Paths{}, err
 		}
