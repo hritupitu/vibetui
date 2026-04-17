@@ -61,6 +61,15 @@ Path: `~/.config/vibetui/settings.json`
 }
 ```
 
+Optional OpenCode theme preference:
+
+```json
+{
+  "assistant": "opencode",
+  "opencodeTheme": "vibetui-cherry"
+}
+```
+
 Valid values:
 
 - `opencode`
@@ -73,11 +82,23 @@ VIBETUI_ASSISTANT=claude vibetui
 VIBETUI_ASSISTANT=opencode vibetui
 ```
 
+Optional theme override (one shell/session):
+
+```bash
+VIBETUI_OPENCODE_THEME=vibetui-cherry vibetui
+```
+
 Priority order:
 
 1. CLI argument (`vibetui opencode` / `vibetui claude`)
 2. `VIBETUI_ASSISTANT` environment variable
 3. `~/.config/vibetui/settings.json`
+
+For the optional OpenCode theme:
+
+1. `VIBETUI_OPENCODE_THEME`
+2. `~/.config/vibetui/settings.json` → `opencodeTheme`
+3. otherwise no forced theme is applied
 
 If you prefer Claude Code, install it from:
 
@@ -301,12 +322,30 @@ This currently includes:
 - `~/.config/vibetui/settings.json`
 - `~/.config/vibetui/welcome.md`
 
-`vibetui` also writes:
+By default, `vibetui` does not force an OpenCode theme.
+
+So on another person's terminal, it should just use their normal/default OpenCode appearance.
+
+If they want the bundled theme, they can opt in with either:
+
+- `~/.config/vibetui/settings.json`:
+
+```json
+{
+  "opencodeTheme": "vibetui-cherry"
+}
+```
+
+- or:
+
+```bash
+VIBETUI_OPENCODE_THEME=vibetui-cherry vibetui
+```
+
+When the bundled theme is enabled, `vibetui` writes:
 
 - `~/.config/vibetui/opencode-tui.json`
 - `~/.config/opencode/themes/vibetui-cherry.json`
-
-Those extra theme files are harmless and are created automatically by the current config bootstrap.
 
 ---
 
